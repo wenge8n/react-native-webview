@@ -3,8 +3,10 @@ package com.reactnativecommunity.webview;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -19,6 +21,7 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +44,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 
 import androidx.annotation.Nullable;
@@ -973,7 +977,25 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         handler.proceed(basicAuthCredential.username, basicAuthCredential.password);
         return;
       }
-      super.onReceivedHttpAuthRequest(view, handler, host, realm);
+      Context context = view.getContext();
+      AlertDialog.Builder builder = new AlertDialog.Builder(context);
+      LayoutInflater layoutInflater = LayoutInflater.from(context);
+      View dialogView = layoutInflater.inflate(R.layout.dialog_auth, null);
+      EditText username = dialogView.findViewById(R.id.username);
+      EditText password = dialogView.findViewById(R.id.password);
+      builder.setView(dialogView)
+              .setTitle("Sign in")
+              .setMessage("https://staging.visacards.africa requires username and password")
+              .setPositiveButton("Sign in", (dialog, which) -> {
+                handler.proceed(username.getText().toString(), password.getText().toString());
+              })
+              .setNegativeButton("Cancel", (dialog, which) -> {
+                handler.cancel();
+              })
+              .setOnDismissListener(dialog -> {
+                handler.cancel();
+              })
+              .show();
     }
 
     @Override
