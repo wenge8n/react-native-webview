@@ -7,4 +7,5 @@ module.exports = {
   singleQuote: true,
   // Adds a trailing comma at the end of all lists (including function arguments)
   trailingComma: 'all',
+  arrowParens: 'avoid',
 };
