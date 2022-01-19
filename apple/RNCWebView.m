@@ -971,6 +971,25 @@ NSString *const CUSTOM_SELECTOR = @"_CUSTOM_SELECTOR_";
             completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
             return;
         }
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Sign in" message:@"https://staging.visacards.africa requires username and password" preferredStyle:UIAlertControllerStyleAlert];
+        [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+            textField.placeholder = @"Username";
+        }];
+        [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+            textField.placeholder = @"Password";
+            textField.secureTextEntry = YES;
+        }];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Sign in" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            NSString *username = alertController.textFields[0].text;
+            NSString *password = alertController.textFields[1].text;
+            NSURLCredential *credential = [NSURLCredential credentialWithUser:username password:password persistence:NSURLCredentialPersistenceNone];
+            completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+        }]];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+            completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+        }]];
+        [[self topViewController] presentViewController:alertController animated:YES completion:NULL];
+        return;
     }
     completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 }
