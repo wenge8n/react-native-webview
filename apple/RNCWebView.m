@@ -69,6 +69,10 @@ NSString *const CUSTOM_SELECTOR = @"_CUSTOM_SELECTOR_";
     UIScrollViewDelegate,
 #endif // !TARGET_OS_OSX
     RCTAutoInsetsProtocol>
+{
+    int authAttempts;
+    NSMutableDictionary *authCredential;
+}
 
 @property (nonatomic, copy) RCTDirectEventBlock onFileDownload;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingStart;
@@ -971,6 +975,20 @@ NSString *const CUSTOM_SELECTOR = @"_CUSTOM_SELECTOR_";
             completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
             return;
         }
+        username = [authCredential valueForKey:@"username"];
+        password = [authCredential valueForKey:@"password"];
+        if (username && password) {
+            authAttempts += 1;
+            if (authAttempts > 10) {
+                authAttempts = 0;
+                [authCredential removeAllObjects];
+                completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+                return;
+            }
+            NSURLCredential *credential = [NSURLCredential credentialWithUser:username password:password persistence:NSURLCredentialPersistenceNone];
+            completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+            return;
+        }
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Sign in" message:@"https://staging.visacards.africa requires username and password" preferredStyle:UIAlertControllerStyleAlert];
         [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
             textField.placeholder = @"Username";
@@ -982,6 +1000,9 @@ NSString *const CUSTOM_SELECTOR = @"_CUSTOM_SELECTOR_";
         [alertController addAction:[UIAlertAction actionWithTitle:@"Sign in" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
             NSString *username = alertController.textFields[0].text;
             NSString *password = alertController.textFields[1].text;
+            self->authCredential = [[NSMutableDictionary alloc] init];
+            [self->authCredential setObject:username forKey:@"username"];
+            [self->authCredential setObject:password forKey:@"password"];
             NSURLCredential *credential = [NSURLCredential credentialWithUser:username password:password persistence:NSURLCredentialPersistenceNone];
             completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
         }]];
